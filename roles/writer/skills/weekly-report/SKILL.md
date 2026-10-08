@@ -10,14 +10,26 @@ argument-hint: [时间范围，默认本周] [仓库路径...]
 
 ## 1. 收集素材
 
-- 时间范围：参数里没给就默认本周一到今天。
-- 提交记录：在我指定的仓库（没指定就是当前仓库）里执行
-  `git log --since="<开始日期>" --author="$(git config user.email)" --no-merges --pretty="%ad %s" --date=short`
-- 问我补充：会议、评审、沟通协调、线上问题处理等 git 里看不到的工作。一次问完。
+- 时间范围：参数里没给就默认本周一 00:00 到现在。
+- 仓库：我指定的仓库，没指定就是当前仓库。每个仓库先 `git fetch --all --prune`，拿到远端所有分支。
+- 提交记录：在每个仓库里执行
+
+  ```bash
+  git log --branches --remotes --no-merges --since="<开始日期> 00:00" --author="$(git config user.email)" --author="noreply@anthropic.com" --pretty="%ad %h %an %s" --date=short
+  ```
+
+  - 两个 `--author` 是“或”的关系：一个是我本人的提交，另一个是 Claude Code 云端会话代我做的提交（作者是 `Claude <noreply@anthropic.com>`），只查我的邮箱会漏掉后者。
+  - `--branches --remotes`：查本地和远端的所有分支。云端会话的提交常在还没合并的 `claude/...` 分支上，只查当前分支会漏；不用 `--all`，它会把 stash、git notes 产生的提交也带进来。
+  - `00:00` 不能省：只写日期时 git 按“当前时刻”算起点，开始那天早些时候的提交会被漏掉。
+- 确认 Claude 提交的归属：执行 `git shortlog -sne --branches --remotes --no-merges --since="<开始日期> 00:00"`，看这段时间有没有我以外的真人作者。
+  - 没有：Claude 的提交都算我的。
+  - 有：Claude 的提交可能来自别人的会话，不能直接算进来，列出来让我在下面一起确认。
+- 问我补充：会议、评审、沟通协调、线上问题处理等 git 里看不到的工作，以及上一步需要确认的提交。一次问完。
 
 ## 2. 归并
 
 - 把零散提交按“事情”归并，一件事一条，不逐条罗列提交。
+- 同一个改动可能因为 cherry-pick、rebase 在几个分支上各出现一次，按标题和内容去重，不重复计。
 - 每条写成结果，而不是过程：“完成订单导出功能，支持 10 万行以内 Excel 导出”，而不是“写了导出代码、改了 bug”。
 - 能量化就量化：数量、耗时、性能指标、影响用户数。没有数据就不写数字。
 

@@ -2,6 +2,10 @@
 
 这个仓库存放我的 Claude Code 角色。每个 `roles/<角色>/` 是一个插件，`.claude-plugin/marketplace.json` 把它们登记成一个插件市场。完整说明见 README.md。
 
+## 分支
+
+- 主分支是 `main`，各台电脑安装和同步都以它为准。`/team:learn`、`/team:new-role` 的改动直接提交到 `main`。
+
 ## 改动规则
 
 - 新角色、新技能用 `python3 scripts/scaffold.py` 生成，不要手工复制目录。它会同步更新 marketplace.json 和 agent 的 `skills:` 列表。
