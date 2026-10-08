@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "architect",
-  "description": "架构师：需求澄清、方案设计、任务拆解。只读。",
+  "description": "架构师：需求澄清、方案设计、任务拆解，PRD 需求分析规划（X-NN）。只读。",
   "author": {
     "name": "hujiuyuan"
   },

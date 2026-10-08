@@ -19,6 +19,6 @@ jobs:
 
       - name: Claude Code plugin validator
         run: |
-          npm install -g @anthropic-ai/claude-code
+          npm install -g @anthropic-ai/claude-code@2.1.293
           claude plugin validate .
           for d in roles/*/; do claude plugin validate "$d"; done

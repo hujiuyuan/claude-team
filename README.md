@@ -12,17 +12,19 @@
 
 | 角色 | 什么时候交给它 | 技能 | 权限 |
 |---|---|---|---|
-| **team**（核心，必装） | 全员通用习惯、组队分派、新建角色、沉淀习惯 | `house-rules` `kickoff` `new-role` `learn` | — |
-| **architect** 架构师 | 需求澄清、方案设计、技术选型、任务拆解 | `design-doc` `task-breakdown` | 只读 |
+| **team**（核心，必装） | 全员通用习惯、遇到问题先辩证再问我、组队分派、新建角色、沉淀习惯 | `house-rules` `deliberate` `kickoff` `new-role` `learn` | — |
+| **architect** 架构师 | 需求澄清、方案设计、技术选型、任务拆解；PRD 需求分析规划（X-NN） | `design-doc` `task-breakdown` `xnn-review` | 只读 |
 | **developer** 开发 | 实现功能、修 bug、写测试、提交 | `implement` `git-commit` | 全部 |
 | **reviewer** 评审 | 合并前审查改动的正确性、安全性、可维护性 | `review-checklist` | 只读 |
 | **writer** 写作 | 技术文档、README、周报和工作汇报 | `tech-doc` `weekly-report` | 读写文件 |
 
-所有角色都会预加载 `team:house-rules`（全员通用习惯），所以“用中文交流”“汇报要写怎么验证的”“破坏性操作先问我”这类习惯只需要写一次。
+所有角色都会预加载 `team:house-rules`（全员通用习惯），所以“用中文交流”“遇到问题先辩证再问我”“破坏性操作先问我”这类习惯只需要写一次。
+
+team 里还有两个只读 agent：`team:judge`（裁判）和 `team:debater`（辩手）。它们只在辩证裁决里由主会话调用，不是可以直接分派的角色。
 
 ## 在新电脑上安装
 
-前提：已安装 [Claude Code](https://code.claude.com/docs)。仓库是私有的话，本机 git 要能访问 GitHub（`gh auth login` 或配置 SSH key）。
+前提：已安装 [Claude Code](https://code.claude.com/docs)。本仓库目前是公开的；如果改成私有，本机 git 要能访问 GitHub（`gh auth login` 或配置 SSH key）。
 
 ### 方式一：命令行（macOS / Linux / Windows 通用）
 
@@ -91,22 +93,61 @@ git clone https://github.com/hujiuyuan/claude-team.git ~/claude-team
 | 点名某个角色 | “让 architect 先出个方案”，或 `@agent-reviewer:reviewer 看一下 src/auth` |
 | 整个会话都由某个角色来做 | `claude --agent developer`（名字不冲突时可以省略前缀，否则写 `developer:developer`） |
 | 多个角色协作完成一件事 | `/team:kickoff 给订单列表加导出 Excel 功能` |
+| 需求分析规划：核对 PRD 遗漏、闭环、拆成可执行的子任务文档 | `/architect:xnn-review X-03 --prd <PRD 路径> --design <设计文档目录>`（见下文） |
+| 让多个角色辩证分析一个问题 | 平时不用管：遇到问题会自动走辩证裁决；也可以手动 `/team:deliberate <问题>` |
 | 直接用某个技能 | `/writer:weekly-report`、`/architect:design-doc 消息队列选型`、`/reviewer:review-checklist` |
 | 把习惯教给角色 | `/team:learn`（见下一节） |
 | 新增一个角色 | `/team:new-role 数据分析师`（见后文） |
 
+### 遇到问题：先辩证，再问你
+
+这是写在 `team:house-rules` 里的全员规则，由 `team:deliberate` 执行：
+
+| 级别 | 什么情况 | 怎么处理 |
+|---|---|---|
+| L0 查证 | 能从 PRD、代码、文档、已有设计里查到 | 直接查，写明出处 |
+| L1 辩证 | 其余所有需要判断的问题 | 2 名盲审分析员（`team:debater`）独立分析，再由裁判（`team:judge`）裁决；两人分歧大时，每个候选方案配一名代言人辩论 1 轮后再裁决 |
+| L2 问你 | 安全底线、裁判判“需你拍板”、必需的输入读不到 | 阶段末一次问完，每个问题都带方案表、推荐、默认值和反悔代价，等你回复期间按默认值推进 |
+
+分析和辩论的固定维度：PRD 是否体现 → 已有设计能否解决 → 有几种方案 → 各自优势 → 能否兼得 → 劣势和规避办法 → 会不会产生新问题 → 需求变更时的更新代价。
+
+辩论原文、裁决和决策日志保存在本机 `~/.claude-team/runs/`，不进任何仓库，可以随时复盘。
+
+### 需求分析规划（X-NN 设计评审）
+
+在设计文档所在的仓库目录里启动 `claude`，然后运行：
+
+```
+/architect:xnn-review X-03 --prd <PRD 路径> --design <设计文档目录> --code <代码目录>
+```
+
+参数都可以省略，省略时会自动查找。流程是固定的：
+
+1. **准备**：读 PRD、样板、代码，读不到的会标注降级。
+2. **需求基线**：architect 给 PRD 条目编号，建立“PRD 条目 → X 文件 → YY”的追溯表。
+3. **三视角盲审**：3 名审计员互相看不到对方的结论，分别检查：
+   - **覆盖**：以 PRD 为准定位遗漏，判定是补 X-03 的功能点，还是新增一个 X 文件。
+   - **闭环**：资源 × 操作矩阵、状态机、权限、审计等横切项。后端必须闭环，前端可以不提供，但要写理由。
+   - **可执行性**：能不能拆成可以独立提交的 YY。
+4. **交叉校验、裁判裁决**：有多个修法的条目进入辩论。
+5. **写文档**：先写 X-03（完整生命周期），再拆成若干 X-03-YY（一个 YY = 一次独立提交，精确到每个动作），最后复审可执行性。
+6. **交付**：只写文件，**不提交**。你抽检后明确说“提交”，再按那个仓库的规范提交并推送。
+
+格式以目标仓库里已有的样板为准；没有样板时，用 `roles/architect/skills/xnn-review/` 下的通用骨架。
+
 ### 让角色以“队友”身份并行协作（实验功能）
 
-Claude Code 的 [agent teams](https://code.claude.com/docs/en/agent-teams) 可以让多个角色作为独立的队友同时工作、互相发消息。在 `~/.claude/settings.json` 里开启：
+Claude Code 的 [agent teams](https://code.claude.com/docs/en/agent-teams) 可以让多个角色作为独立的队友同时工作、互相发消息。建议只在需要时对单个会话开启，不要写进全局配置：
 
-```json
-{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }
+```bash
+CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude
 ```
 
 然后用 `/team:kickoff` 或直接说“用 reviewer:reviewer 类型生成一个队友去评审 auth 模块”。需要注意：
 
 - 队友不会预加载 `skills:` 里的技能。每个角色的提示词里已经写了“没有就先用 Skill 工具加载”，所以仍然能用上。
-- 开启后，Claude 平时的子代理分派也会变成生成队友，token 消耗明显更高。不需要时把值改回 `"0"`。
+- 开启后，带 `name` 的子代理调用会变成生成队友，token 消耗明显更高。辩证裁决调用子代理时不传 `name`，不受影响。
+- 一个会话只能有一个团队，不能嵌套。
 - 只能在交互式会话里用（`claude -p` 不支持）。
 
 ## 沉淀习惯：让角色越用越像你
@@ -132,8 +173,10 @@ Claude Code 的 [agent teams](https://code.claude.com/docs/en/agent-teams) 可�
 ```bash
 # 生成骨架（--readonly：不给写文件工具；--skill 可以写多个）
 python3 scripts/scaffold.py role data-analyst -d "数据分析师：取数、分析、出结论。只读。" --skill sql-query --readonly
-# 给已有角色加技能
+# 给已有角色加技能（--no-preload：只由主会话调用的流程技能，不预加载进 agent）
 python3 scripts/scaffold.py skill developer debug -d "排查线上问题的步骤：收集现象、缩小范围、验证假设"
+# 一个角色由几个 agent 配合时，再加 agent
+python3 scripts/scaffold.py agent <角色> <agent名> -d "什么时候交给它" --readonly
 # 填完生成文件里的 TODO 后校验
 python3 scripts/validate.py
 ```
@@ -146,9 +189,10 @@ python3 scripts/validate.py
 claude-team/
 ├── .claude-plugin/marketplace.json   # 插件市场清单：登记所有角色
 ├── roles/                            # 每个子目录是一个角色（一个插件）
-│   ├── team/                         # 核心：通用习惯 + 团队管理技能
+│   ├── team/                         # 核心：通用习惯 + 辩证裁决 + 团队管理技能
 │   │   ├── .claude-plugin/plugin.json
-│   │   └── skills/{house-rules,kickoff,new-role,learn}/SKILL.md
+│   │   ├── agents/{judge,debater}.md       # 只读，仅辩证裁决使用
+│   │   └── skills/{house-rules,deliberate,kickoff,new-role,learn}/SKILL.md
 │   └── developer/                    # 普通角色的样子
 │       ├── .claude-plugin/plugin.json      # 依赖 team
 │       ├── agents/developer.md             # 角色提示词
@@ -189,6 +233,19 @@ skills:                         # 作为子代理启动时预加载的技能全�
 - **不写 `version` 字段**。不写时，插件版本取自 git 提交，每次 push 都算新版本，不用手动改版本号。`claude plugin validate` 会提示 “No version specified”，忽略即可。
 - 角色名、技能名用小写字母和连字符，全仓库唯一；角色名不能以 `claude-`、`anthropic-` 开头（Claude Code 保留）。
 - 插件里的 `CLAUDE.md` 不会被加载，所以全员通用的习惯放在 `team:house-rules` 技能里。
+- team 里的 agent 必须只读，不能有 `Agent`、`Write`、`Edit`（防止辩证裁决递归、误改文件），validate.py 会检查。
+
+### 敏感词检查
+
+**本仓库是公开的**，角色和技能里只写通用规则，示例用虚构领域。为了兜底，`validate.py` 会用一份**只放在本机**的词表检查仓库里的所有文件：
+
+```bash
+# 在仓库根目录建词表（已在 .gitignore 里，不会入库）；一行一个词，# 开头是注释
+printf '公司名\n内部项目代号\n' > .sensitive-words.txt
+python3 scripts/validate.py
+```
+
+也可以用环境变量 `CLAUDE_TEAM_SENSITIVE_WORDS=<词表路径>` 指向别处。没有词表时跳过这项检查。
 
 ## 常见问题
 

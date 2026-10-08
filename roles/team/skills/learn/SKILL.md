@@ -36,6 +36,8 @@ argument-hint: [要记住的习惯；留空则从当前对话中提炼]
 
 我确认改动，即视为同意提交并 push 到 claude-team 仓库。
 
+**claude-team 是公开仓库。** 写入前检查：不得包含公司或项目内部信息（项目名、内部系统名、真实的接口、字段、表名、客户信息），示例一律改成虚构领域。`scripts/validate.py` 还会用本机的敏感词表兜底检查（见 README“敏感词检查”）。
+
 ## 4. 写入、校验、同步
 
 按顺序找仓库的本地克隆：环境变量 `CLAUDE_TEAM_HOME` → `~/claude-team` → 问我；都没有就 `git clone https://github.com/hujiuyuan/claude-team.git`。
