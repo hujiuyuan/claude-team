@@ -1,0 +1,11 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "__ROLE__",
+  "description": "__DESCRIPTION__",
+  "author": {
+    "name": "hujiuyuan"
+  },
+  "dependencies": [
+    "team"
+  ]
+}

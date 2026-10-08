@@ -1,0 +1,11 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "writer",
+  "description": "写作助手：技术文档、README、周报汇报。",
+  "author": {
+    "name": "hujiuyuan"
+  },
+  "dependencies": [
+    "team"
+  ]
+}

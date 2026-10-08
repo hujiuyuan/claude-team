@@ -1,0 +1,39 @@
+{
+  "name": "claude-team",
+  "owner": {
+    "name": "hujiuyuan"
+  },
+  "description": "我的 Claude 角色团队：每个角色 = 提示词（agent）+ 专属技能（skills），任何电脑一条命令装好。",
+  "plugins": [
+    {
+      "name": "team",
+      "source": "./roles/team",
+      "description": "团队核心（必装）：全员通用习惯、组队分派、新建角色、沉淀习惯。",
+      "category": "core"
+    },
+    {
+      "name": "architect",
+      "source": "./roles/architect",
+      "description": "架构师：需求澄清、方案设计、任务拆解。只读。",
+      "category": "role"
+    },
+    {
+      "name": "developer",
+      "source": "./roles/developer",
+      "description": "开发工程师：实现、修 bug、写测试、按规范提交。",
+      "category": "role"
+    },
+    {
+      "name": "reviewer",
+      "source": "./roles/reviewer",
+      "description": "代码评审：正确性、安全性、可维护性分级意见。只读。",
+      "category": "role"
+    },
+    {
+      "name": "writer",
+      "source": "./roles/writer",
+      "description": "写作助手：技术文档、README、周报汇报。",
+      "category": "role"
+    }
+  ]
+}

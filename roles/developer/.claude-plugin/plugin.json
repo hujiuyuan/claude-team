@@ -1,0 +1,11 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "developer",
+  "description": "开发工程师：实现、修 bug、写测试、按规范提交。",
+  "author": {
+    "name": "hujiuyuan"
+  },
+  "dependencies": [
+    "team"
+  ]
+}

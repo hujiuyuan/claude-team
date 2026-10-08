@@ -1,0 +1,11 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "reviewer",
+  "description": "代码评审：正确性、安全性、可维护性分级意见。只读。",
+  "author": {
+    "name": "hujiuyuan"
+  },
+  "dependencies": [
+    "team"
+  ]
+}

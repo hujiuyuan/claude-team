@@ -1,0 +1,24 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Repo structure
+        run: python3 scripts/validate.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Claude Code plugin validator
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude plugin validate .
+          for d in roles/*/; do claude plugin validate "$d"; done

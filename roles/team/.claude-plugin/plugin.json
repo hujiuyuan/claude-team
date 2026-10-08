@@ -1,0 +1,8 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "team",
+  "description": "团队核心（必装）：全员通用习惯、组队分派、新建角色、沉淀习惯。",
+  "author": {
+    "name": "hujiuyuan"
+  }
+}
