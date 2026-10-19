@@ -12,7 +12,7 @@ argument-hint: <任务描述>
 
 ## 1. 盘点可用角色
 
-claude-team 的角色以 `<角色>:<角色>` 命名，例如 `developer:developer`、`reviewer:reviewer`。只使用当前确实可用的角色。缺少合适的角色时，用通用 agent 顶上，并在汇报里建议“新增 xx 角色（`/team:new-role`）”。
+claude-team 的角色以 `<角色>:<角色>` 命名，例如 `developer:developer`、`reviewer:reviewer`。只使用当前确实可用的角色。`team:judge` 和 `team:debater` 不是可以直接分派的角色，只在辩证裁决（`team:deliberate`）里使用。缺少合适的角色时，用通用 agent 顶上，并在汇报里建议“新增 xx 角色（`/team:new-role`）”。
 
 ## 2. 选流水线
 
@@ -26,13 +26,14 @@ claude-team 的角色以 `<角色>:<角色>` 命名，例如 `developer:develope
 | 代码评审 | reviewer；改动大时按模块或关注点并行多个 reviewer |
 | 文档 / 报告 / 周报 | writer →（可选）reviewer 核对技术事实 |
 | 技术调研 / 选型 | architect；多个候选方向可并行调研，最后由你汇总对比 |
+| 需求分析规划（PRD → X-NN / X-NN-YY 文档） | 不组队，直接用 `/architect:xnn-review <X-NN>` 的固定流程 |
 
 能一个角色做完就不组队。组队的收益是分工和互相校验，代价是时间和 token。
 
 ## 3. 选执行方式
 
 - **Agent teams**（实验功能，`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` 时可用）：适合多个角色需要长时间并行、互相沟通的任务。你作为队长创建团队，按角色的 agent 类型生成队友（例：“用 reviewer:reviewer 类型生成一个队友评审 auth 模块”），通过共享任务列表分派和跟进。队友不会自动预加载角色 skill，分派任务时提醒它先加载 `team:house-rules` 和角色自己的 skill。
-- **子代理**（默认）：用 Agent 工具按流水线依次调用对应角色；互不依赖的步骤在同一轮里并行调用。
+- **子代理**（默认）：用 Agent 工具按流水线依次调用对应角色，调用时不传 `name`（开启了 agent teams 时，带 `name` 会变成队友）；互不依赖的步骤在同一轮里并行调用。
 
 ## 4. 交接要自包含
 
@@ -40,7 +41,7 @@ claude-team 的角色以 `<角色>:<角色>` 命名，例如 `developer:develope
 
 - 目标和验收标准；验收清单逐条带需求原件出处（文件:行号）
 - 需求原件位置（需求文档、原型、已有设计），让角色自己能回原文核
-- 一句硬约束：卡住不许停下来问，按 house-rules 三道关自判，结论写进结果
+- 一句硬约束：卡住不许停下来问，按 house-rules「遇到问题」一节分级自判，结论写进结果
 - 要求干活期间及时做 WIP 提交：进程重启会让在跑的子代理整批停掉且没有通知，没提交的就丢了
 - 派出后又追加的口径，收工时对照产物逐条核一遍，没落实的打包重发
 - 相关文件路径；上一步的产出（方案、diff 摘要、评审意见）原文或文件路径

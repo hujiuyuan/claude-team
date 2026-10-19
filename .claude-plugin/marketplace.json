@@ -8,13 +8,13 @@
     {
       "name": "team",
       "source": "./roles/team",
-      "description": "团队核心（必装）：全员通用习惯、组队分派、新建角色、沉淀习惯。",
+      "description": "团队核心（必装）：全员通用习惯、遇到问题先辩证裁决再问我、组队分派、新建角色、沉淀习惯。",
       "category": "core"
     },
     {
       "name": "architect",
       "source": "./roles/architect",
-      "description": "架构师：需求澄清、方案设计、任务拆解。只读。",
+      "description": "架构师：需求澄清、方案设计、任务拆解，PRD 需求分析规划（X-NN）。只读。",
       "category": "role"
     },
     {

@@ -8,17 +8,20 @@
 
 ## 改动规则
 
-- 新角色、新技能用 `python3 scripts/scaffold.py` 生成，不要手工复制目录。它会同步更新 marketplace.json 和 agent 的 `skills:` 列表。
+- 新角色、新技能用 `python3 scripts/scaffold.py` 生成，不要手工复制目录。它会同步更新 marketplace.json 和 agent 的 `skills:` 列表。一个角色由几个 agent 配合时用 `scaffold.py agent` 添加；只由主会话调用的流程技能用 `scaffold.py skill --no-preload`。
 - 每次改动后运行 `python3 scripts/validate.py`，有 `claude` 命令时再运行 `claude plugin validate .`。不通过不提交。
 - 不要给 plugin.json 或 marketplace.json 加 `version`：版本取自 git 提交，加了反而要手动维护。
 - 每个角色的 plugin.json 都要有 `"dependencies": ["team"]`；每个 agent 的 `skills:` 都要包含 `team:house-rules`。
 - `skills:` 里的技能名写全名 `<插件>:<技能>`。设置了 `disable-model-invocation: true` 的技能不能放进 `skills:`。
 - 角色名、技能名：小写字母、数字、连字符；全仓库唯一；不以 `claude-`、`anthropic-` 开头。
+- `roles/team/agents/` 里的 agent（judge、debater）必须只读：显式声明 tools，不能有 `Agent`、`Write`、`Edit`。
 
 ## 内容规则
 
+- **仓库是公开的**：只写通用规则，示例一律用虚构领域；不写公司名、项目名、内部系统名、真实的接口、字段、表名。提交前用本机敏感词表跑 `validate.py`（见 README）。
 - 提示词和技能正文用简体中文；命令、标识符、frontmatter 字段名保持英文。
 - 全员通用的习惯只写在 `roles/team/skills/house-rules/SKILL.md`，不要在各角色里重复。
+- “遇到问题先辩证再问我”的分级规则在 house-rules，执行协议在 `team:deliberate`；改其中一处时检查另一处是否一致。
 - 角色特有的偏好写进该角色提示词的「我的习惯」章节；具体流程、模板、清单写成技能。
 - 写法参考 `roles/team/skills/new-role/authoring-guide.md`：写可执行的规则并附原因，不写感想。
 

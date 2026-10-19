@@ -20,7 +20,9 @@ argument-hint: <角色名或一句话描述>
 
 ## 1. 访谈（一次问完，每项给出你建议的默认值）
 
-如果当前对话里已经有足够信息，直接起草，不要重复问。
+如果当前对话里已经有足够信息，直接起草，不要重复问；能从仓库和对话推断的先推断，只问推断不出的偏好。
+
+**claude-team 是公开仓库**：角色和技能里只写通用规则，示例用虚构领域，不写公司或项目内部信息。
 
 - **名字**：英文小写加短横线，如 `data-analyst`；不能以 `claude-`、`anthropic-` 开头，不能和已有角色重名。
 - **定位**：一句话说清它是谁、什么时候该交给它。
@@ -35,8 +37,10 @@ argument-hint: <角色名或一句话描述>
 ```bash
 # 新角色（--readonly 表示不给写文件工具；--skill 可重复）
 python3 scripts/scaffold.py role <角色名> -d "<一句话定位>" --skill <技能名>
-# 给已有角色加技能
+# 给已有角色加技能（--no-preload：只由主会话调用的流程技能，不预加载进 agent）
 python3 scripts/scaffold.py skill <角色名> <技能名> -d "<什么时候用这个技能>"
+# 给已有角色加一个 agent（例如由几个 agent 配合的角色）
+python3 scripts/scaffold.py agent <角色名> <agent名> -d "<什么时候交给它>"
 ```
 
 脚本会从 `templates/role/` 生成文件，登记到 `.claude-plugin/marketplace.json`，并把技能写进 agent 的 `skills:` 列表。
