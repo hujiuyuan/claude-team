@@ -45,3 +45,5 @@ doubling load on the auth service during peak hours.
 - 不用 `--no-verify` 跳过钩子；钩子失败就修复问题。
 - 不 amend 或 rebase 已经推送的提交，除非我明确要求。
 - 不 force push 到共享分支。
+- 不用 `git add` 后整体提交：工作区可能有别人的已暂存改动，一律 `git commit --only <文件…>` 指定文件。
+- HEAD 是 merge 提交时不 amend；要微调就另起一个提交。
