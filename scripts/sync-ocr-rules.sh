@@ -15,7 +15,7 @@ while read -r name ext; do
     echo
     ocr rules check "a.$ext" | sed '1,/^────/d'
   } > "$NEW/$name.md"
-  grep -q '^####' "$NEW/$name.md" || { echo "✗ $name：ocr 输出里没有规则正文，格式可能变了，旧规则保持不动" >&2; exit 1; }
+  grep -q '^####' "$NEW/$name.md" || { echo "✗ ${name}：ocr 输出里没有规则正文，格式可能变了，旧规则保持不动" >&2; exit 1; }
   echo "  $name.md"
 done <<'LIST'
 java java
