@@ -12,11 +12,11 @@
 
 | 角色 | 什么时候交给它 | 技能 | 权限 |
 |---|---|---|---|
-| **team**（核心，必装） | 全员通用习惯、遇到问题先辩证再问我、组队分派、沉淀习惯 | `house-rules` `deliberate` `kickoff` `learn` | — |
-| **architect** 架构师 | 需求澄清、方案设计、技术选型、任务拆解；PRD 需求分析规划（X-NN） | `design-doc` `task-breakdown` `xnn-review` | 只读 |
+| **team**（核心，必装） | 全员通用习惯、遇到问题先辩证再问我、组队分派、沉淀习惯、写所有类型的文档 | `house-rules` `deliberate` `kickoff` `learn` `doc` | — |
+| **architect** 架构师 | 需求澄清、方案设计、技术选型、任务拆解；PRD 需求分析规划（X-NN） | `xnn-review`（写文档用 `team:doc`） | 只读 |
 | **developer** 开发 | 实现功能、修 bug、写测试、提交 | `implement` `git-commit` | 全部 |
 | **reviewer** 评审 | 合并前审查改动的正确性、安全性、可维护性 | `review-checklist` | 只读 |
-| **writer** 写作 | 技术文档、README、周报和工作汇报 | `tech-doc` `weekly-report` | 读写文件 |
+| **writer** 写作 | 技术文档、README、周报和工作汇报 | 写文档用 `team:doc` | 读写文件 |
 
 所有角色都会预加载 `team:house-rules`（全员通用习惯），所以“用中文交流”“遇到问题先辩证再问我”“破坏性操作先问我”这类习惯只需要写一次。
 
@@ -95,7 +95,7 @@ git clone https://github.com/hujiuyuan/claude-team.git ~/claude-team
 | 多个角色协作完成一件事 | `/team:kickoff 给订单列表加导出 Excel 功能` |
 | 需求分析规划：核对 PRD 遗漏、闭环、拆成可执行的子任务文档 | `/architect:xnn-review X-03 --prd <PRD 路径> --design <设计文档目录>`（见下文） |
 | 让多个角色辩证分析一个问题 | 平时不用管：遇到问题会自动走辩证裁决；也可以手动 `/team:deliberate <问题>` |
-| 直接用某个技能 | `/writer:weekly-report`、`/architect:design-doc 消息队列选型`、`/reviewer:review-checklist` |
+| 直接用某个技能 | `/team:doc 周报`、`/team:doc 消息队列选型方案`、`/reviewer:review-checklist` |
 | 把习惯教给角色 | `/team:learn`（见下一节） |
 | 新增一个角色 | 直接跟 Claude 说「加一个数据分析师角色」（见后文） |
 
@@ -192,7 +192,7 @@ claude-team/
 │   ├── team/                         # 核心：通用习惯 + 辩证裁决 + 团队管理技能
 │   │   ├── .claude-plugin/plugin.json
 │   │   ├── agents/{judge,debater}.md       # 只读，仅辩证裁决使用
-│   │   └── skills/{house-rules,deliberate,kickoff,learn}/SKILL.md
+│   │   └── skills/{house-rules,deliberate,kickoff,learn,doc}/SKILL.md
 │   └── developer/                    # 普通角色的样子
 │       ├── .claude-plugin/plugin.json      # 依赖 team
 │       ├── agents/developer.md             # 角色提示词

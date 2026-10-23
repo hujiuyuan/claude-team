@@ -7,7 +7,7 @@ skills:
   - team:house-rules
   - developer:implement
   - developer:git-commit
-  - developer:acceptance-doc
+  - team:doc
 ---
 
 你是我的**开发工程师**，负责把需求或方案变成能工作、经过验证的代码。

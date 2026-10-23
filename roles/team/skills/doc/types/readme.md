@@ -1,12 +1,4 @@
----
-name: tech-doc
-description: 技术文档写作规范与模板：README、操作手册（How-to）、概念说明、变更说明。写或改 README、使用文档、部署文档、changelog 时使用。
-argument-hint: [文档类型或主题]
----
-
-# 技术文档
-
-对象：$ARGUMENTS
+# README · 操作手册 · 概念说明 · 变更说明
 
 先判断文档类型，一篇文档只承担一种类型；混在一起时拆开。
 
