@@ -5,7 +5,7 @@ set -euo pipefail
 OUT="$(cd "$(dirname "$0")/.." && pwd)/roles/reviewer/skills/review-checklist/ocr-rules"
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 cd "$TMP" && git init -q
-mkdir -p "$OUT"
+NEW="$TMP/out"; mkdir -p "$NEW"
 VER=$(ocr --version | head -1)
 # 文件名 = 规则组，后面是用来探测该组的示例扩展名
 while read -r name ext; do
@@ -14,7 +14,8 @@ while read -r name ext; do
     echo "<!-- 适用：$(ocr rules check "a.$ext" | sed -n 's/^Pattern: //p') -->"
     echo
     ocr rules check "a.$ext" | sed '1,/^────/d'
-  } > "$OUT/$name.md"
+  } > "$NEW/$name.md"
+  grep -q '^####' "$NEW/$name.md" || { echo "✗ $name：ocr 输出里没有规则正文，格式可能变了，旧规则保持不动" >&2; exit 1; }
   echo "  $name.md"
 done <<'LIST'
 java java
@@ -30,4 +31,5 @@ php php
 yaml yaml
 default sh
 LIST
+rm -rf "$OUT" && mkdir -p "$(dirname "$OUT")" && cp -R "$NEW" "$OUT"
 echo "已导出到 $OUT"
