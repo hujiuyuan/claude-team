@@ -58,6 +58,14 @@ for r in team "${roles[@]}"; do
   installed+=("$r")
 done
 
+# 快捷命令（如 /team）：插件命令都带「插件名:」前缀，不带前缀的只能放本机 skills 目录
+mkdir -p "$HOME/.claude/skills"
+for d in "$ROOT"/shortcuts/*/; do
+  name=$(basename "$d")
+  ln -sfn "${d%/}" "$HOME/.claude/skills/$name"
+  echo "→ 快捷命令 /$name"
+done
+
 echo
 echo "✓ 已安装：${installed[*]}"
 echo "  新开的会话自动生效；已打开的会话里执行 /reload-plugins。"

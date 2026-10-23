@@ -97,6 +97,7 @@ git clone https://github.com/hujiuyuan/claude-team.git ~/claude-team
 | 让多个角色辩证分析一个问题 | 平时不用管：遇到问题会自动走辩证裁决；也可以手动 `/team:deliberate <问题>` |
 | 直接用某个技能 | `/team:doc 周报`、`/team:doc 消息队列选型方案`、`/reviewer:review`、`/reviewer:ocr src/order -model sonnet` |
 | 把习惯教给角色 | `/team:learn`（见下一节） |
+| 组队完成一个任务 | `/team <任务>`（等同 `/team:kickoff`，由 setup.sh 装到本机） |
 | 新增一个角色 | 直接跟 Claude 说「加一个数据分析师角色」（见后文） |
 
 ### 遇到问题：先辩证，再问你
