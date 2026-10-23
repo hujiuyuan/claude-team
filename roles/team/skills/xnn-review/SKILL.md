@@ -8,6 +8,8 @@ argument-hint: <X-NN> [--prd <PRD 路径>] [--design <设计文档目录>] [--co
 
 参数：$ARGUMENTS
 
+需要装 architect 插件（S1 要调用 `architect:architect`）；没装时先告诉用户运行 claude-team 的 `scripts/setup.sh`，不要用通用 agent 顶替。
+
 主会话担任主持人。参与者：
 
 - `architect:architect`：需求基线、YY 拆分。

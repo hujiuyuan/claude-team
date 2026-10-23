@@ -33,7 +33,8 @@ claude-team 的角色以 `<角色>:<角色>` 命名，例如 `developer:develope
 | 新功能 / 较大改动 | architect（方案 + 拆解 + 按需求原件拆验收清单）→ developer（实现）→ reviewer（评审）→ developer（修复阻塞问题）→ writer（文档，可选） |
 | Bug 修复 | developer（复现 → 定位 → 修复 → 回归测试）→ reviewer |
 | 小改动（单文件、几十行以内） | 不组队，直接做或交给 developer |
-| 代码评审 | reviewer；改动大时按模块或关注点并行多个 reviewer |
+| 代码评审（看改动） | 走 `/reviewer:review`；改动大时按模块或关注点并行多个 reviewer |
+| 全量扫描（不看改动，整体体检） | 走 `/reviewer:ocr <范围>`，默认用 DeepSeek |
 | 文档 / 报告 / 周报 | writer →（可选）reviewer 核对技术事实 |
 | 技术调研 / 选型 | architect；多个候选方向可并行调研，最后由你汇总对比 |
 | 需求分析规划（PRD → X-NN / X-NN-YY 文档） | 不组队，直接用 `/team:xnn-review <X-NN>` 的固定流程 |

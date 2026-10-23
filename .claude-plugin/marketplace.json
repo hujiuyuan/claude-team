@@ -14,7 +14,7 @@
     {
       "name": "architect",
       "source": "./roles/architect",
-      "description": "架构师：需求澄清、方案设计、任务拆解，PRD 需求分析规划（X-NN）。只读。",
+      "description": "架构师：需求澄清、方案设计、技术选型、任务拆解。只读。",
       "category": "role"
     },
     {

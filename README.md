@@ -14,7 +14,7 @@
 |---|---|---|---|
 | **team**（核心，必装） | 全员通用习惯、遇到问题先辩证再问我、组队分派、沉淀习惯、写所有类型的文档、PRD 需求分析规划、派活给 DeepSeek、后端设计流程、需求转原型、图解说明 | `house-rules` `deliberate` `kickoff` `learn` `doc` `xnn-review` `ds-dispatch` `backend-design` `spec-driven-prototype` `show-me` | — |
 | **ccds-panel** 面板 | 聊天旁边实时显示 ccds（DeepSeek）任务进度，能停止、续跑、丢弃改动 | — | — |
-| **architect** 架构师 | 需求澄清、方案设计、技术选型、任务拆解；PRD 需求分析规划（X-NN） | 写文档用 `team:doc`，PRD 需求分析规划用 `team:xnn-review` | 只读 |
+| **architect** 架构师 | 需求澄清、方案设计、技术选型、任务拆解 | 写文档用 `team:doc`，PRD 需求分析规划用 `team:xnn-review` | 只读 |
 | **developer** 开发 | 实现功能、修 bug、写测试、提交 | `implement` `git-commit` | 全部 |
 | **reviewer** 评审 | 合并前审查改动的正确性、安全性、可维护性 | `/reviewer:review` 评审改动、`/reviewer:ocr` 全量扫描；规则在 `review-checklist`（含阿里 OpenCodeReview 的分语言规则，见 THIRD_PARTY_NOTICES.md） | 只读 |
 | **writer** 写作 | 技术文档、README、周报和工作汇报 | 写文档用 `team:doc` | 读写文件 |
