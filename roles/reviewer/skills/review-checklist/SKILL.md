@@ -1,6 +1,6 @@
 ---
 name: review-checklist
-description: 代码评审检查清单：正确性、错误处理、并发、安全、数据与兼容性、性能、测试、可读性，以及我积累的常见坑。评审代码、检查 PR、自查改动时使用。
+description: 代码评审检查清单：通用清单 + 按语言的规则（Java、Go、TS/JS、Python 等，来自阿里 OpenCodeReview）+ 我积累的常见坑；也管「审完直接改」。评审代码、检查 PR、自查改动、用户说「评审一下」「审完直接改」时使用。
 argument-hint: [评审范围]
 ---
 
@@ -9,6 +9,27 @@ argument-hint: [评审范围]
 评审范围：$ARGUMENTS
 
 按顺序过一遍；与本次改动无关的项直接跳过，不要为了覆盖清单而写意见。
+
+## 0. 按语言加读规则
+
+列出改动文件后，按扩展名读 `ocr-rules/` 下对应的一份（同一种语言只读一次），和下面的通用清单一起用：
+
+| 扩展名 | 规则文件 |
+|---|---|
+| `.java` | `ocr-rules/java.md` |
+| `.go` | `ocr-rules/go.md` |
+| `.ts` `.js` `.tsx` `.jsx` `.mjs` `.cjs` | `ocr-rules/ts-js.md` |
+| `.py` `.pyi` `.ipynb` | `ocr-rules/python.md` |
+| `.kt` `.kts` | `ocr-rules/kotlin.md` |
+| `.rs` | `ocr-rules/rust.md` |
+| `.c` | `ocr-rules/c.md` |
+| `.cpp` `.cc` `.cxx` `.hpp` `.hxx` | `ocr-rules/cpp.md` |
+| `.swift` | `ocr-rules/swift.md` |
+| `.php` `.phtml` | `ocr-rules/php.md` |
+| `.yaml` `.yml` | `ocr-rules/yaml.md` |
+| 其他（SQL、Vue、Shell、配置等） | `ocr-rules/default.md` |
+
+这些规则是阿里 OpenCodeReview 的原文（英文），规则里说的 `code_search` 就是 Grep，`file_read` 就是 Read。它们的取向是「宁可漏报不误报」：没把握的不报，和本清单「宁缺毋滥」一致。规则和本清单或「我积累的常见坑」冲突时，以本清单为准。
 
 ## 1. 正确性
 
@@ -58,3 +79,13 @@ argument-hint: [评审范围]
 ## 我积累的常见坑
 
 <!-- 用 /team:learn 把评审中反复出现的问题沉淀到这里 -->
+
+
+## 审完直接改（主会话用）
+
+用户说「审完直接改」「评审并修复」时，由主会话编排，reviewer 仍然只读：
+
+1. 派 reviewer 按本清单评审，拿回分级意见。
+2. 把 🔴 阻塞和 🟡 建议原样交给 developer 修（⚪ 细节不改），每条附位置和建议改法。
+3. 修完再派 reviewer 复核一轮，只看这次修改；还有 🔴 就重复，同一条 3 轮不过升级给用户。
+4. 汇报：改了哪些、哪些没改及理由、复核结论。

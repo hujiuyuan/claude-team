@@ -15,7 +15,7 @@
 | **team**（核心，必装） | 全员通用习惯、遇到问题先辩证再问我、组队分派、沉淀习惯、写所有类型的文档 | `house-rules` `deliberate` `kickoff` `learn` `doc` | — |
 | **architect** 架构师 | 需求澄清、方案设计、技术选型、任务拆解；PRD 需求分析规划（X-NN） | `xnn-review`（写文档用 `team:doc`） | 只读 |
 | **developer** 开发 | 实现功能、修 bug、写测试、提交 | `implement` `git-commit` | 全部 |
-| **reviewer** 评审 | 合并前审查改动的正确性、安全性、可维护性 | `review-checklist` | 只读 |
+| **reviewer** 评审 | 合并前审查改动的正确性、安全性、可维护性 | `review-checklist`（含阿里 OpenCodeReview 的分语言规则，见 THIRD_PARTY_NOTICES.md） | 只读 |
 | **writer** 写作 | 技术文档、README、周报和工作汇报 | 写文档用 `team:doc` | 读写文件 |
 
 所有角色都会预加载 `team:house-rules`（全员通用习惯），所以“用中文交流”“遇到问题先辩证再问我”“破坏性操作先问我”这类习惯只需要写一次。
