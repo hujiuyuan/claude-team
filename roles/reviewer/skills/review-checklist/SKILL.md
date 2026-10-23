@@ -1,6 +1,7 @@
 ---
 name: review-checklist
 description: 代码评审检查清单：通用清单 + 按语言的规则（Java、Go、TS/JS、Python 等，来自阿里 OpenCodeReview）+ 我积累的常见坑；也管「审完直接改」。评审代码、检查 PR、自查改动、用户说「评审一下」「审完直接改」时使用。
+user-invocable: false
 argument-hint: [评审范围]
 ---
 
