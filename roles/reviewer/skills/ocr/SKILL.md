@@ -50,7 +50,7 @@ disable-model-invocation: true
 
 派法：
 
-- DeepSeek：按 `ds-dispatch` 写 brief，`ccds-run start --readonly --max-turns 25 --id scan-<编号>-<时分> --name "扫描 第<编号>批 <语言>" --cwd <仓库根> --brief ...`（`deepseek-flash` 加 `--model 'deepseek-flash[1M]'`），`run_in_background: true`。进度在 ccds 面板上。
+- DeepSeek：按 `team:ds-dispatch` 写 brief，`ccds-run start --readonly --max-turns 25 --id scan-<编号>-<时分> --name "扫描 第<编号>批 <语言>" --cwd <仓库根> --brief ...`（`deepseek-flash` 加 `--model 'deepseek-flash[1M]'`），`run_in_background: true`。进度在 ccds 面板上。
 - Claude：Agent 工具派 `reviewer:reviewer`，`model` 填用户指定的值。
 
 每批返回后，由你把结果写进 `<扫描目录>/batch-<编号>.md`（DeepSeek 的在 `/tmp/ccds-runs/<ID>.state.json` 的 `result` 里）。

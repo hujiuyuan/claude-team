@@ -1,0 +1,6 @@
+{
+  "name": "ccds-panel",
+  "description": "聊天旁边的 ccds 任务面板：实时进度、停止、接着做、丢弃改动、验收结论。需要 bin/ccds-run（setup.sh 会装好）。",
+  "types": "./types/index.d.ts",
+  "dependencies": ["team"]
+}

@@ -24,7 +24,7 @@ disable-model-invocation: true
 ## 2. 派评审
 
 - Claude 模型：用 Agent 工具派 `reviewer:reviewer`（`model` 填用户指定的值，没指定就不填），提示词写清范围、取 diff 的命令、这次改动的目的（能从提交信息或对话里看出来的话）。
-- DeepSeek：按 `ds-dispatch` 技能写 brief，用 `ccds-run start --readonly --model <对应模型> ...` 派出；brief 里要求按 `review-checklist` 的规则和输出格式评审，规则文件写绝对路径让 worker 自己读：本技能目录的上一级下的 `review-checklist/SKILL.md` 和 `review-checklist/ocr-rules/<语言>.md`（加载本技能时显示的 Base directory 就是本技能目录）。本机没有 `ccds-run` 时，告诉用户并改用默认模型。
+- DeepSeek：按 `team:ds-dispatch` 技能写 brief，用 `ccds-run start --readonly --model <对应模型> ...` 派出；brief 里要求按 `review-checklist` 的规则和输出格式评审，规则文件写绝对路径让 worker 自己读：本技能目录的上一级下的 `review-checklist/SKILL.md` 和 `review-checklist/ocr-rules/<语言>.md`（加载本技能时显示的 Base directory 就是本技能目录）。本机没有 `ccds-run` 时，告诉用户并改用默认模型。
 
 ## 3. 汇报
 

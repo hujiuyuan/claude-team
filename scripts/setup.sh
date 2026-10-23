@@ -58,6 +58,14 @@ for r in team "${roles[@]}"; do
   installed+=("$r")
 done
 
+# 命令行工具（如 ccds-run）：链接到 ~/.local/bin
+mkdir -p "$HOME/.local/bin"
+for f in "$ROOT"/bin/*; do
+  [ -f "$f" ] || continue
+  ln -sfn "$f" "$HOME/.local/bin/$(basename "$f")"
+  echo "→ 命令 $(basename "$f")（~/.local/bin）"
+done
+
 # 快捷命令（如 /team）：插件命令都带「插件名:」前缀，不带前缀的只能放本机 skills 目录
 mkdir -p "$HOME/.claude/skills"
 for d in "$ROOT"/shortcuts/*/; do

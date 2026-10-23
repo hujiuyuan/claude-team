@@ -1,0 +1,315 @@
+#!/usr/bin/env python3
+"""ccds-run：启动 ccds worker 并边跑边写进度，供 ccds 任务面板读取。
+
+  ccds-run start --id ID --name 名称 --brief 文件 [--cwd 目录] [--timeout 秒] [--max-turns N]
+                 [--model M] [--allowed "Bash(go test:*),..."] [--bypass] [--readonly]
+  ccds-run resume ID [补充说明]     接着上次的会话继续做（后台）
+  ccds-run stop ID                  停止
+  ccds-run note ID 文字             写验收结论（面板展示）
+  ccds-run clean                    清理所有已结束任务的记录
+  ccds-run discard ID               丢弃该任务在工作目录里的未提交改动（git checkout + 删新增文件）
+
+文件都在 /tmp/ccds-runs/：ID.brief.md（交接）、ID.jsonl（原始输出）、ID.err、ID.state.json（面板读的进度）。
+前台运行，跑完才返回；在 Claude 里用 run_in_background 启动即可收到完成通知。
+"""
+import argparse, json, os, signal, subprocess, sys, time
+
+DIR = "/tmp/ccds-runs"
+DISALLOWED = ("Bash(git push:*),Bash(git commit:*),Bash(git reset:*),Bash(git clean:*),"
+              "Bash(git checkout --:*),Bash(git restore:*),Bash(git stash:*),Bash(rm -rf:*),"
+              "Bash(sudo:*),Bash(ccds:*),Bash(ccds-run:*),Bash(claude:*)")
+MAX_STEPS = 40
+
+
+def path(i, ext):
+    return f"{DIR}/{i}.{ext}"
+
+
+def load(i):
+    try:
+        return json.load(open(path(i, "state.json")))
+    except Exception:
+        return None
+
+
+def save(st):
+    tmp = path(st["id"], "state.json.tmp")
+    json.dump(st, open(tmp, "w"), ensure_ascii=False)
+    os.replace(tmp, path(st["id"], "state.json"))
+
+
+def hm():
+    return time.strftime("%H:%M")
+
+
+def short(s, n=70):
+    s = " ".join(str(s).split())
+    return s if len(s) <= n else s[: n - 1] + "…"
+
+
+def rel(p, cwd):
+    if not p or not cwd:
+        return p
+    rp, rc = os.path.realpath(p), os.path.realpath(cwd)
+    return os.path.relpath(rp, rc) if rp.startswith(rc + "/") else p
+
+
+def describe(name, inp, cwd):
+    if name == "Bash":
+        return "跑命令：" + short(inp.get("description") or inp.get("command", ""))
+    if name in ("Edit", "MultiEdit", "Write", "NotebookEdit"):
+        return "改文件：" + rel(inp.get("file_path") or inp.get("notebook_path", ""), cwd)
+    if name == "Read":
+        return "读文件：" + rel(inp.get("file_path", ""), cwd)
+    if name in ("Grep", "Glob"):
+        return "搜索：" + short(inp.get("pattern", ""), 50)
+    if name in ("Agent", "Task"):
+        return "派子任务：" + short(inp.get("description", ""), 50)
+    if name in ("WebSearch", "WebFetch"):
+        return "查资料：" + short(inp.get("query") or inp.get("url", ""), 50)
+    if name == "TodoWrite":
+        return "更新待办清单"
+    return name
+
+
+def nlines(s):
+    return len(str(s).splitlines()) if s else 0
+
+
+def track_file(st, name, inp, cwd):
+    f = inp.get("file_path")
+    if not f or name not in ("Edit", "MultiEdit", "Write"):
+        return
+    k = rel(f, cwd)
+    add = dele = 0
+    if name == "Write":
+        add = nlines(inp.get("content"))
+    elif name == "Edit":
+        add, dele = nlines(inp.get("new_string")), nlines(inp.get("old_string"))
+    else:
+        for e in inp.get("edits", []):
+            add += nlines(e.get("new_string"))
+            dele += nlines(e.get("old_string"))
+    a, d = st["files"].get(k, [0, 0])
+    st["files"][k] = [a + add, d + dele]
+
+
+def push_step(st, text, kind="cur"):
+    for s in st["steps"]:
+        if s[2] == "cur":
+            s[2] = "ok"
+    st["steps"].append([hm(), text, kind])
+    st["steps"] = st["steps"][-MAX_STEPS:]
+    st["step"] = text
+
+
+def run(st, argv, cwd, timeout):
+    st.update(status="running", pid=None, end=None, exitCode=None)
+    save(st)
+    out = open(path(st["id"], "jsonl"), "a")
+    err = open(path(st["id"], "err"), "a")
+    brief = open(st["briefFile"])
+    p = subprocess.Popen(argv, cwd=cwd, stdin=brief, stdout=subprocess.PIPE, stderr=err,
+                         text=True, start_new_session=True)
+    st["pid"] = p.pid
+    save(st)
+    deadline = time.time() + timeout
+    timed_out = False
+
+    def on_alarm(*_):
+        nonlocal timed_out
+        timed_out = True
+        try:
+            os.killpg(p.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    signal.signal(signal.SIGALRM, on_alarm)
+    signal.alarm(max(1, int(deadline - time.time())))
+    result = None
+    seen = set()
+    for line in p.stdout:
+        out.write(line)
+        out.flush()
+        try:
+            e = json.loads(line)
+        except Exception:
+            continue
+        st["sessionId"] = e.get("session_id") or st.get("sessionId")
+        t = e.get("type")
+        if t == "system" and e.get("subtype") == "init":
+            st["model"] = e.get("model", st.get("model"))
+        elif t == "assistant":
+            mid = (e.get("message") or {}).get("id")
+            if mid not in seen:  # 同一轮回复会拆成多条输出，按消息 id 计一步
+                seen.add(mid)
+                st["turns"] += 1
+            for c in (e.get("message") or {}).get("content") or []:
+                if c.get("type") == "tool_use":
+                    inp = c.get("input") or {}
+                    track_file(st, c.get("name", ""), inp, cwd)
+                    push_step(st, describe(c.get("name", ""), inp, cwd))
+                elif c.get("type") == "text" and c.get("text", "").strip():
+                    st["lastText"] = short(c["text"], 300)
+        elif t == "result":
+            result = e
+            st["turns"] = e.get("num_turns", st["turns"])
+            st["models"] = sorted((e.get("modelUsage") or {}).keys())
+            st["denied"] = [d.get("tool_name") for d in e.get("permission_denials") or []]
+        save(st)
+    p.wait()
+    signal.alarm(0)
+    st["exitCode"] = p.returncode
+    st["end"] = time.time()
+    flag = path(st["id"], "stop")
+    if os.path.exists(flag):
+        os.remove(flag)
+        st["status"], text = "stopped", "你手动停止了它"
+    elif timed_out:
+        st["status"], text = "timeout", f"超过 {timeout // 60} 分钟上限，被自动停止"
+    elif result and not result.get("is_error") and result.get("subtype") == "success":
+        st["status"], text = "done", "完成，等待 Claude 验收"
+        st["result"] = (result.get("result") or "")[:20000]
+    else:
+        sub = (result or {}).get("subtype") or f"退出码 {p.returncode}"
+        st["status"] = "failed"
+        text = "步数用完，没做完" if sub == "error_max_turns" else f"失败：{sub}"
+        st["result"] = short((result or {}).get("result", "") or open(path(st["id"], "err")).read()[-600:], 600)
+    push_step(st, text, "ok" if st["status"] == "done" else "err")
+    st["pid"] = None
+    save(st)
+    return 0 if st["status"] == "done" else 1
+
+
+def base_argv(st):
+    a = ["ccds", "-p", "--output-format", "stream-json", "--verbose",
+         "--permission-mode", "bypassPermissions" if st.get("bypass") else "acceptEdits",
+         "--max-turns", str(st["maxTurns"]), "--strict-mcp-config", "-n", "ccds-" + st["id"]]
+    if st.get("modelArg"):
+        a += ["--model", st["modelArg"]]
+    if st.get("allowed"):
+        a += ["--allowedTools", st["allowed"]]
+    dis = DISALLOWED + (",Edit,MultiEdit,Write,NotebookEdit" if st.get("readonly") else "")
+    return a + ["--disallowedTools", dis]
+
+
+def cmd_start(a):
+    os.makedirs(DIR, exist_ok=True)
+    if load(a.id) and load(a.id).get("status") == "running":
+        sys.exit(f"{a.id} 还在跑")
+    for ext in ("jsonl", "err"):
+        open(path(a.id, ext), "w").close()
+    bf = path(a.id, "brief.md")
+    if os.path.abspath(a.brief) != bf:
+        open(bf, "w").write(open(a.brief).read())
+    st = dict(id=a.id, name=a.name or a.id, cwd=os.path.realpath(a.cwd), start=time.time(),
+              maxTurns=a.max_turns, timeout=a.timeout, modelArg=a.model, allowed=a.allowed,
+              bypass=a.bypass, readonly=a.readonly, briefFile=bf, turns=0, steps=[], files={}, step="启动中", note=None)
+    push_step(st, "启动")
+    sys.exit(run(st, base_argv(st), st["cwd"], a.timeout))
+
+
+def cmd_resume(a):
+    st = load(a.id) or sys.exit(f"找不到 {a.id}")
+    if st.get("status") == "running":
+        sys.exit(f"{a.id} 还在跑")
+    if not st.get("sessionId"):
+        sys.exit(f"{a.id} 没有会话可续")
+    msg = a.text or "接着上次没做完的继续做，按原交接里的验收要求跑完，最后按原格式汇报。"
+    if not a.foreground:  # 面板按钮调用：脱离父进程，后台跑
+        subprocess.Popen([os.path.abspath(sys.argv[0]), "resume", a.id, msg, "--foreground"],
+                         start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print(f"{a.id} 已在后台接着做")
+        return
+    bf = path(a.id, "resume.md")
+    open(bf, "w").write(msg)
+    st["briefFile"] = bf
+    st["turns"] = 0
+    st["note"] = None
+    push_step(st, "接着做：" + short(msg, 40))
+    sys.exit(run(st, base_argv(st) + ["--resume", st["sessionId"]], st["cwd"], st["timeout"]))
+
+
+def cmd_stop(a):
+    st = load(a.id) or sys.exit(f"找不到 {a.id}")
+    if st.get("status") != "running" or not st.get("pid"):
+        sys.exit(f"{a.id} 没在跑")
+    open(path(a.id, "stop"), "w").close()
+    try:
+        os.killpg(st["pid"], signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    print(f"已停止 {a.id}")
+
+
+def cmd_note(a):
+    st = load(a.id) or sys.exit(f"找不到 {a.id}")
+    st["note"] = a.text
+    st["noteOk"] = not a.bad
+    save(st)
+
+
+def cmd_discard(a):
+    st = load(a.id) or sys.exit(f"找不到 {a.id}")
+    if st.get("status") == "running":
+        sys.exit(f"{a.id} 还在跑，先停止")
+    files = list(st["files"])
+    for f in files:
+        full = os.path.join(st["cwd"], f)
+        tracked = subprocess.run(["git", "ls-files", "--error-unmatch", f], cwd=st["cwd"],
+                                 capture_output=True).returncode == 0
+        if tracked:
+            subprocess.run(["git", "checkout", "--", f], cwd=st["cwd"])
+        elif os.path.isfile(full):
+            os.remove(full)
+    st["files"] = {}
+    st["status"] = "stopped"
+    push_step(st, f"已丢弃 {len(files)} 个文件的改动", "err")
+    save(st)
+    print(f"已丢弃 {len(files)} 个文件的改动")
+
+
+def cmd_clean(a):
+    n = 0
+    for f in os.listdir(DIR) if os.path.isdir(DIR) else []:
+        if f.endswith(".state.json"):
+            i = f[: -len(".state.json")]
+            st = load(i)
+            if st and st.get("status") != "running":
+                for ext in ("state.json", "jsonl", "err", "brief.md", "resume.md"):
+                    if os.path.exists(path(i, ext)):
+                        os.remove(path(i, ext))
+                n += 1
+    print(f"清理了 {n} 个已结束的任务")
+
+
+def main():
+    ap = argparse.ArgumentParser(description="启动 ccds 并写进度")
+    sp = ap.add_subparsers(dest="cmd", required=True)
+    s = sp.add_parser("start")
+    s.add_argument("--id", required=True)
+    s.add_argument("--name")
+    s.add_argument("--brief", required=True)
+    s.add_argument("--cwd", default=".")
+    s.add_argument("--timeout", type=int, default=3600)
+    s.add_argument("--max-turns", type=int, default=60)
+    s.add_argument("--model")
+    s.add_argument("--allowed")
+    s.add_argument("--bypass", action="store_true")
+    s.add_argument("--readonly", action="store_true", help="只读：禁止改文件（评审、调研用）")
+    r = sp.add_parser("resume")
+    r.add_argument("id")
+    r.add_argument("text", nargs="?")
+    r.add_argument("--foreground", action="store_true")
+    sp.add_parser("clean")
+    for n in ("stop", "discard"):
+        sp.add_parser(n).add_argument("id")
+    n = sp.add_parser("note")
+    n.add_argument("id")
+    n.add_argument("text")
+    n.add_argument("--bad", action="store_true", help="验收不通过")
+    a = ap.parse_args()
+    dict(start=cmd_start, resume=cmd_resume, stop=cmd_stop, note=cmd_note, discard=cmd_discard, clean=cmd_clean)[a.cmd](a)
+
+
+if __name__ == "__main__":
+    main()

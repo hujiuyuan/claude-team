@@ -188,7 +188,7 @@ def main():
             err(f"{rel(d)}/.claude-plugin/plugin.json: dependencies 需要包含 '{CORE}'")
 
         agents = sorted((d / "agents").glob("*.md")) if (d / "agents").is_dir() else []
-        if not agents and not (d / "skills").is_dir():
+        if not agents and not (d / "skills").is_dir() and not (d / "hooks").is_dir():
             err(f"{rel(d)}: 角色里既没有 agent 也没有 skill")
         descriptions = {}
         for a in agents:

@@ -34,6 +34,12 @@
       "source": "./roles/writer",
       "description": "写作助手：技术文档、README、周报汇报。",
       "category": "role"
+    },
+    {
+      "name": "ccds-panel",
+      "source": "./roles/ccds-panel",
+      "description": "ccds 任务面板：在聊天旁边实时看 DeepSeek worker 的进度，能停止、续跑、丢弃改动。",
+      "category": "tool"
     }
   ]
 }
