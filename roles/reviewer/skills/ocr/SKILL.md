@@ -45,11 +45,12 @@ disable-model-invocation: true
 - 要扫的文件列表（相对仓库根目录的路径）
 - 评审规则：`review-checklist/SKILL.md` 第 1~8 节和「我积累的常见坑」，加上该批语言的 `review-checklist/ocr-rules/<语言>.md`。给绝对路径让它自己读：路径在本技能目录的上一级下（加载本技能时显示的 Base directory 就是本技能目录）
 - 看的是整个文件的现状，不是改动；只报有把握的真问题，没把握的不报
+- 范围限死：只读这批文件、规则文件，以及为确认问题必须看的本仓库内调用方；不运行被扫的脚本，不研究仓库外的程序（命令行工具、依赖包的源码或二进制）。确认不了就写「疑似」并说明还缺什么，不要为了确认去深挖。原因：实测 worker 会为确认一条外部工具的行为把步数全耗光，一条结果都交不出
 - 结果放在最后一条消息里返回（worker 只读，不写文件），每条一行：`严重程度（🔴/🟡/⚪）| 文件:行 | 问题 | 在什么情况下出错 | 建议改法`；没发现问题写「无」
 
 派法：
 
-- DeepSeek：按 `ds-dispatch` 写 brief，`ccds-run start --readonly --id scan-<编号>-<时分> --name "扫描 第<编号>批 <语言>" --cwd <仓库根> --brief ...`（`deepseek-flash` 加 `--model 'deepseek-flash[1M]'`），`run_in_background: true`。进度在 ccds 面板上。
+- DeepSeek：按 `ds-dispatch` 写 brief，`ccds-run start --readonly --max-turns 25 --id scan-<编号>-<时分> --name "扫描 第<编号>批 <语言>" --cwd <仓库根> --brief ...`（`deepseek-flash` 加 `--model 'deepseek-flash[1M]'`），`run_in_background: true`。进度在 ccds 面板上。
 - Claude：Agent 工具派 `reviewer:reviewer`，`model` 填用户指定的值。
 
 每批返回后，由你把结果写进 `<扫描目录>/batch-<编号>.md`（DeepSeek 的在 `/tmp/ccds-runs/<ID>.state.json` 的 `result` 里）。
