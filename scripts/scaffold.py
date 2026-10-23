@@ -62,12 +62,15 @@ def add_skill(role, skill, description, agents=None):
         die(f"角色 '{role}' 不存在")
     for other in (ROOT / "roles").glob(f"*/skills/{skill}"):
         die(f"技能名 '{skill}' 已被 {other.relative_to(ROOT)} 使用")
+    if agents is None:
+        agents = [role] if (role_dir / "agents" / f"{role}.md").is_file() else []
+    for name in agents:  # 先检查，避免技能目录建好了才发现 agent 名写错
+        if not (role_dir / "agents" / f"{name}.md").is_file():
+            die(f"roles/{role}/agents/{name}.md 不存在")
     template = (TEMPLATE / "skills" / "__SKILL__" / "SKILL.md").read_text(encoding="utf-8")
     write_new(role_dir / "skills" / skill / "SKILL.md",
               render(template, skill=skill, description=yaml_str(description)))
 
-    if agents is None:
-        agents = [role] if (role_dir / "agents" / f"{role}.md").is_file() else []
     for name in agents:
         preload(role_dir / "agents" / f"{name}.md", f"{role}:{skill}")
 
@@ -78,9 +81,11 @@ def preload(agent, entry_name):
         die(f"{agent.relative_to(ROOT)} 不存在")
     text = agent.read_text(encoding="utf-8")
     end = text.find("\n---", 4)
+    if end == -1:
+        die(f"{agent.relative_to(ROOT)}: frontmatter 没有结束的 ---")
     head, body = text[:end], text[end:]
     entry = f"  - {entry_name}"
-    if entry in head:
+    if entry in head.split("\n"):  # 整行比较：review 不能被 review-checklist 误判为已存在
         return
     if re.search(r"^skills:\s*$", head, re.M):
         lines = head.split("\n")
@@ -117,8 +122,12 @@ def cmd_role(args):
     agents = args.agent or [role]
     for name in agents:  # 先全部检查，避免写了一半才失败
         check_new_agent(name, args.color)
+    if len(set(agents)) != len(agents):
+        die("--agent 有重复")
     for skill in args.skill:
         check_name(skill, "技能")
+        for other in (ROOT / "roles").glob(f"*/skills/{skill}"):
+            die(f"技能名 '{skill}' 已被 {other.relative_to(ROOT)} 使用")
     if (ROOT / "roles" / role).exists():
         die(f"roles/{role} 已存在")
     market = json.loads(MARKETPLACE.read_text(encoding="utf-8"))
@@ -132,7 +141,8 @@ def cmd_role(args):
               json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
 
     for name in agents:
-        write_agent(role, name, args.description, args.readonly, args.color)
+        desc = args.description if len(agents) == 1 else f"TODO：{name} 负责什么（同一角色里各 agent 的描述不能相同）"
+        write_agent(role, name, desc, args.readonly, args.color)
 
     for skill in args.skill:
         add_skill(role, skill, f"TODO：{skill} 做什么、什么时候用、用户会怎么说", agents)

@@ -128,6 +128,8 @@ def check_named(path, fields, expected, kind):
         err(f"{rel(path)}: 缺少 name")
     elif not NAME_RE.match(name):
         err(f"{rel(path)}: name '{name}' 只能用小写字母、数字和连字符")
+    elif name.startswith(RESERVED_PREFIXES):
+        err(f"{rel(path)}: name 不能以 {', '.join(RESERVED_PREFIXES)} 开头")
     elif name != expected:
         err(f"{rel(path)}: name '{name}' 应与{kind}名 '{expected}' 一致")
     desc = fields.get("description", "")
@@ -149,6 +151,8 @@ def main():
     for d in role_dirs:
         if d.name not in entries:
             err(f"{rel(d)}: 没有登记到 marketplace.json 的 plugins 里")
+        if not NAME_RE.match(d.name):
+            err(f"{rel(d)}: 角色名只能用小写字母、数字和连字符")
         if d.name.startswith(RESERVED_PREFIXES):
             err(f"{rel(d)}: 角色名不能以 {', '.join(RESERVED_PREFIXES)} 开头")
     for name, entry in entries.items():
@@ -186,6 +190,8 @@ def main():
         deps = {dep if isinstance(dep, str) else dep.get("name") for dep in manifest.get("dependencies", [])}
         if d.name != CORE and CORE not in deps:
             err(f"{rel(d)}/.claude-plugin/plugin.json: dependencies 需要包含 '{CORE}'")
+        for dep in sorted(x for x in deps if x and x not in role_names):
+            err(f"{rel(d)}/.claude-plugin/plugin.json: 依赖 '{dep}' 在本仓库里不存在")
 
         agents = sorted((d / "agents").glob("*.md")) if (d / "agents").is_dir() else []
         if not agents and not (d / "skills").is_dir() and not (d / "hooks").is_dir():

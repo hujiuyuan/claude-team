@@ -35,13 +35,21 @@ done
 if [ "$dev" = 1 ]; then want="$ROOT"; else want="$REPO"; fi
 
 # 已添加的 marketplace 来源和这次要的不一样（GitHub ↔ 本地克隆）时，先移除再重新添加
-entry=$(claude plugin marketplace list --json </dev/null | tr -d '\n' | grep -o "{[^{}]*\"name\": *\"$MARKET\"[^{}]*}" || true)
-if [ -n "$entry" ] && ! printf '%s' "$entry" | grep -qF "\"$want\""; then
-  echo "→ marketplace 来源改为 $want，重新添加"
+current=$(claude plugin marketplace list --json </dev/null | python3 -c '
+import json, sys
+for m in json.load(sys.stdin):
+    if m.get("name") == sys.argv[1]:
+        print(m.get("repo") or m.get("path") or m.get("url") or m.get("installLocation") or "?")
+' "$MARKET")
+if [ -n "$current" ] && [ "$current" != "$want" ]; then
+  echo "→ marketplace 来源由 $current 改为 $want，重新添加"
   claude plugin marketplace remove "$MARKET" </dev/null
-  entry=""
-fi
-if [ -z "$entry" ]; then
+  if ! claude plugin marketplace add "$want" </dev/null; then
+    echo "✗ 添加 $want 失败，恢复原来源 $current" >&2
+    claude plugin marketplace add "$current" </dev/null || true
+    exit 1
+  fi
+elif [ -z "$current" ]; then
   echo "→ 添加 marketplace：$want"
   claude plugin marketplace add "$want" </dev/null
 else
