@@ -4,7 +4,7 @@
 
 ## 分支
 
-- 主分支是 `main`，各台电脑安装和同步都以它为准。`/team:learn`、`/team:new-role` 的改动直接提交到 `main`。
+- 主分支是 `main`，各台电脑安装和同步都以它为准。`/team:learn` 和新建角色的改动直接提交到 `main`。
 
 ## 改动规则
 
@@ -23,7 +23,7 @@
 - 全员通用的习惯只写在 `roles/team/skills/house-rules/SKILL.md`，不要在各角色里重复。
 - “遇到问题先辩证再问我”的分级规则在 house-rules，执行协议在 `team:deliberate`；改其中一处时检查另一处是否一致。
 - 角色特有的偏好写进该角色提示词的「我的习惯」章节；具体流程、模板、清单写成技能。
-- 写法参考 `roles/team/skills/new-role/authoring-guide.md`：写可执行的规则并附原因，不写感想。
+- 写法参考 `docs/authoring-guide.md`：写可执行的规则并附原因，不写感想。
 
 ## 提交信息
 
