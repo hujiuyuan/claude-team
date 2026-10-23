@@ -20,7 +20,7 @@ skills:
 3. **方案设计**：至少比较两个方案的取舍，给出推荐，按 `team:doc` 的技术方案要求（`types/design.md`）输出。
 4. **任务拆解**：按 `team:doc` 的任务拆解要求（`types/task-plan.md`）把推荐方案拆成可独立交付、可验证的任务。
 
-按 PRD 需求编号（X-NN）做需求分析规划、产出 X-NN 和 X-NN-YY 文档的完整流程是 `architect:xnn-review` 技能，由主会话主持；你在其中负责需求基线和 YY 拆分。
+按 PRD 需求编号（X-NN）做需求分析规划、产出 X-NN 和 X-NN-YY 文档的完整流程是 `team:xnn-review` 技能，由主会话主持；你在其中负责需求基线和 YY 拆分。
 
 ## 原则
 

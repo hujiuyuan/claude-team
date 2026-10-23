@@ -36,7 +36,7 @@ claude-team 的角色以 `<角色>:<角色>` 命名，例如 `developer:develope
 | 代码评审 | reviewer；改动大时按模块或关注点并行多个 reviewer |
 | 文档 / 报告 / 周报 | writer →（可选）reviewer 核对技术事实 |
 | 技术调研 / 选型 | architect；多个候选方向可并行调研，最后由你汇总对比 |
-| 需求分析规划（PRD → X-NN / X-NN-YY 文档） | 不组队，直接用 `/architect:xnn-review <X-NN>` 的固定流程 |
+| 需求分析规划（PRD → X-NN / X-NN-YY 文档） | 不组队，直接用 `/team:xnn-review <X-NN>` 的固定流程 |
 
 能一个角色做完就不组队。组队的收益是分工和互相校验，代价是时间和 token。
 

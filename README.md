@@ -12,8 +12,8 @@
 
 | 角色 | 什么时候交给它 | 技能 | 权限 |
 |---|---|---|---|
-| **team**（核心，必装） | 全员通用习惯、遇到问题先辩证再问我、组队分派、沉淀习惯、写所有类型的文档 | `house-rules` `deliberate` `kickoff` `learn` `doc` | — |
-| **architect** 架构师 | 需求澄清、方案设计、技术选型、任务拆解；PRD 需求分析规划（X-NN） | `xnn-review`（写文档用 `team:doc`） | 只读 |
+| **team**（核心，必装） | 全员通用习惯、遇到问题先辩证再问我、组队分派、沉淀习惯、写所有类型的文档、PRD 需求分析规划 | `house-rules` `deliberate` `kickoff` `learn` `doc` `xnn-review` | — |
+| **architect** 架构师 | 需求澄清、方案设计、技术选型、任务拆解；PRD 需求分析规划（X-NN） | 写文档用 `team:doc`，PRD 需求分析规划用 `team:xnn-review` | 只读 |
 | **developer** 开发 | 实现功能、修 bug、写测试、提交 | `implement` `git-commit` | 全部 |
 | **reviewer** 评审 | 合并前审查改动的正确性、安全性、可维护性 | `/reviewer:review` 评审改动、`/reviewer:ocr` 全量扫描；规则在 `review-checklist`（含阿里 OpenCodeReview 的分语言规则，见 THIRD_PARTY_NOTICES.md） | 只读 |
 | **writer** 写作 | 技术文档、README、周报和工作汇报 | 写文档用 `team:doc` | 读写文件 |
@@ -93,7 +93,7 @@ git clone https://github.com/hujiuyuan/claude-team.git ~/claude-team
 | 点名某个角色 | “让 architect 先出个方案”，或 `@agent-reviewer:reviewer 看一下 src/auth` |
 | 整个会话都由某个角色来做 | `claude --agent developer`（名字不冲突时可以省略前缀，否则写 `developer:developer`） |
 | 多个角色协作完成一件事 | `/team:kickoff 给订单列表加导出 Excel 功能` |
-| 需求分析规划：核对 PRD 遗漏、闭环、拆成可执行的子任务文档 | `/architect:xnn-review X-03 --prd <PRD 路径> --design <设计文档目录>`（见下文） |
+| 需求分析规划：核对 PRD 遗漏、闭环、拆成可执行的子任务文档 | `/team:xnn-review X-03 --prd <PRD 路径> --design <设计文档目录>`（见下文） |
 | 让多个角色辩证分析一个问题 | 平时不用管：遇到问题会自动走辩证裁决；也可以手动 `/team:deliberate <问题>` |
 | 直接用某个技能 | `/team:doc 周报`、`/team:doc 消息队列选型方案`、`/reviewer:review`、`/reviewer:ocr src/order -model sonnet` |
 | 把习惯教给角色 | `/team:learn`（见下一节） |
@@ -118,7 +118,7 @@ git clone https://github.com/hujiuyuan/claude-team.git ~/claude-team
 在设计文档所在的仓库目录里启动 `claude`，然后运行：
 
 ```
-/architect:xnn-review X-03 --prd <PRD 路径> --design <设计文档目录> --code <代码目录>
+/team:xnn-review X-03 --prd <PRD 路径> --design <设计文档目录> --code <代码目录>
 ```
 
 参数都可以省略，省略时会自动查找。流程是固定的：
@@ -133,7 +133,7 @@ git clone https://github.com/hujiuyuan/claude-team.git ~/claude-team
 5. **写文档**：先写 X-03（完整生命周期），再拆成若干 X-03-YY（一个 YY = 一次独立提交，精确到每个动作），最后复审可执行性。
 6. **交付**：只写文件，**不提交**。你抽检后明确说“提交”，再按那个仓库的规范提交并推送。
 
-格式以目标仓库里已有的样板为准；没有样板时，用 `roles/architect/skills/xnn-review/` 下的通用骨架。
+格式以目标仓库里已有的样板为准；没有样板时，用 `roles/team/skills/xnn-review/` 下的通用骨架。
 
 ### 让角色以“队友”身份并行协作（实验功能）
 
@@ -192,7 +192,7 @@ claude-team/
 │   ├── team/                         # 核心：通用习惯 + 辩证裁决 + 团队管理技能
 │   │   ├── .claude-plugin/plugin.json
 │   │   ├── agents/{judge,debater}.md       # 只读，仅辩证裁决使用
-│   │   └── skills/{house-rules,deliberate,kickoff,learn,doc}/SKILL.md
+│   │   └── skills/{house-rules,deliberate,kickoff,learn,doc,xnn-review}/SKILL.md
 │   └── developer/                    # 普通角色的样子
 │       ├── .claude-plugin/plugin.json      # 依赖 team
 │       ├── agents/developer.md             # 角色提示词
